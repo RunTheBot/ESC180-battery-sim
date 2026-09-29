@@ -89,8 +89,8 @@ def calculate_charge(total_time):
         time_till_overcharge = max(0, 90 - cur_charge - fast_charge_limit)
         # Only check when we have good battery health cuz transition has weird logic
         if slow_charge_time >= time_till_overcharge and good_battery_health:
-            overcharge_events.append(cur_time + time_till_overcharge)
-            check_battery_health(cur_time + time_till_overcharge)
+            overcharge_events.append(cur_time + time_till_overcharge + fast_charge_limit)
+            check_battery_health(cur_time + time_till_overcharge + fast_charge_limit)
             # weird transition logic only every should be hit once on trasition
             # it basically clamps the value to 90
             if not good_battery_health:
@@ -134,7 +134,7 @@ def simulate_activity(activity, duration):
     if activity == "charge":
         apply_activity(*calculate_charge(duration))
     elif activity == "use":
-        apply_activity(*calculate_use(duration))
+        apply_activity(*calculate_battery_use(duration))
     elif activity == "idle":
         apply_activity(*calculate_idle(duration))
     else:
