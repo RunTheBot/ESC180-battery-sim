@@ -208,6 +208,9 @@ if __name__ == '__main__':
     print(get_cur_battery_health()) # True
     print(duration_fast_charge_possible()) # 10
 
+    # Edge case: we will hit a overchage so we stop at 90
+    print("This should be none:", charge_time_needed(50))
+
     # NOOOOOOO
     simulate_activity("charge",80)
     print(get_cur_charge()) # 90
@@ -230,3 +233,5 @@ if __name__ == '__main__':
 
     initialize()
     # add your tests here
+
+    # Edge case, transition into bad battery state but needs a charge above 90 so like 50 mins battery is at 100%
