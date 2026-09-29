@@ -47,8 +47,8 @@ def check_battery_health(time):
     if overcharges_in_range >= 3:
         good_battery_health = False
         max_capacity = 80
-
-def calculate_use(minutes):
+# present tense use
+def calculate_battery_use(minutes):
     # Uses 2% per minute
     # Temperature increases by 1C per minute
 
