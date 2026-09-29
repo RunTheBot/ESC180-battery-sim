@@ -30,11 +30,11 @@ def calculate_max_fast_charge():
     # 3. Good battery health
     if not good_battery_health:
         return (0, 0, 0)
-    # find which limit is reached first
-    time_temp_limit = (40 - cur_temp) / 0.5
-    time_charge_limit = (80 - cur_charge) / 3
-    time_limit = max(0, min(time_temp_limit, time_charge_limit))
-    return (time_limit, time_limit * 3, time_limit * 0.5)
+    # find which max is reached first
+    time_temp_max = (40 - cur_temp) / 0.5
+    time_charge_max = (80 - cur_charge) / 3
+    time_max = max(0, min(time_temp_max, time_charge_max))
+    return (time_max, time_max * 3, time_max * 0.5)
 
 def check_battery_health(time):
     global good_battery_health, cur_charge, max_capacity
@@ -68,50 +68,65 @@ def calculate_idle(minutes):
 
 def calculate_charge(total_time):
     global cur_charge, max_capacity, good_battery_health
-    # Fast charge till max or we hit out time limit
-    fast_time_limit, fast_charge_limit, fast_temp_limit = calculate_max_fast_charge()
+    # Fast charge till max or we hit out time max
+    fast_time_max, fast_charge_max, fast_temp_max = calculate_max_fast_charge()
 
-    if total_time <= fast_time_limit:
+    if total_time <= fast_time_max:
         return (total_time, total_time * 3, total_time * 0.5)
     else:
         # slow charge the rest of the time
-        slow_charge_time = total_time - fast_time_limit
+        slow_charge_time = total_time - fast_time_max
         slow_charge = slow_charge_time
         slow_temp = slow_charge_time * 0.25
 
         # ensure we don't charge past max charge
-        if (slow_charge + cur_charge + fast_charge_limit > max_capacity):
-            slow_charge += max_capacity - (slow_charge + cur_charge + fast_charge_limit)
+        if (slow_charge + cur_charge + fast_charge_max > max_capacity):
+            slow_charge += max_capacity - (slow_charge + cur_charge + fast_charge_max)
 
         # Overcharge logic
         # Define as when the battery is charged beyond 90% (inclusive)
 
-        time_till_overcharge = max(0, 90 - cur_charge - fast_charge_limit)
+        time_till_overcharge = max(0, 90 - cur_charge - fast_charge_max)
         # Only check when we have good battery health cuz transition has weird logic
         if slow_charge_time >= time_till_overcharge and good_battery_health:
-            overcharge_events.append(cur_time + time_till_overcharge + fast_charge_limit)
-            check_battery_health(cur_time + time_till_overcharge + fast_charge_limit)
+            overcharge_events.append(cur_time + time_till_overcharge + fast_charge_max)
+            check_battery_health(cur_time + time_till_overcharge + fast_charge_max)
             # weird transition logic only every should be hit once on trasition
             # it basically clamps the value to 90
             if not good_battery_health:
                 slow_charge = time_till_overcharge
 
 
-        return (fast_time_limit + slow_charge_time, fast_charge_limit + slow_charge, fast_temp_limit + slow_temp)
+        return (fast_time_max + slow_charge_time, fast_charge_max + slow_charge, fast_temp_max + slow_temp)
 
 def calculate_charge_time(charge_needed):
     # Returns the time needed to charge the battery for use in minutes
     if charge_needed <= 0:
         return 0
 
-    time_limit, charge_limit, temp_limit = calculate_max_fast_charge()
-    if charge_needed <= charge_limit:
+    fast_time_max, fast_charge_max, fast_temp_max = calculate_max_fast_charge()
+    if charge_needed <= fast_charge_max:
         return charge_needed / 3
     else:
         # slow charge the rest of the time
-        slow_charge_needed = charge_needed - charge_limit
+        slow_charge_needed = charge_needed - fast_charge_max
         slow_charge_time = slow_charge_needed
-        return time_limit + slow_charge_time
+        # Over charge logic
+
+        time_till_overcharge = max(0, 90 - cur_charge - fast_charge_max)
+        # Only check when we have good battery health cuz transition has weird logic
+        if slow_charge_time > time_till_overcharge and good_battery_health:
+            time = cur_time + time_till_overcharge + fast_charge_max
+            overcharges_in_range = 0
+            for event in overcharge_events:
+                if time - event < 360:
+                    overcharges_in_range += 1
+            if overcharges_in_range >= 2:
+                return None
+        
+        return fast_time_max + slow_charge_time
+        
+        
 
 def apply_activity(duration, charge, temp):
     global cur_temp
