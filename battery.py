@@ -67,7 +67,7 @@ def calculate_idle(minutes):
     return (minutes, minutes * -0.5, minutes * -1)
 
 def calculate_charge(total_time):
-    global cur_charge, max_capacity
+    global cur_charge, max_capacity, good_battery_health
     # Fast charge till max or we hit out time limit
     fast_time_limit, fast_charge_limit, fast_temp_limit = calculate_max_fast_charge()
 
@@ -86,10 +86,16 @@ def calculate_charge(total_time):
         # Overcharge logic
         # Define as when the battery is charged beyond 90% (inclusive)
 
-        time_till_overcharge = (90 - cur_charge-fast_charge_limit)
-        if slow_charge_time >= time_till_overcharge:
+        time_till_overcharge = max(0, 90 - cur_charge - fast_charge_limit)
+        # Only check when we have good battery health cuz transition has weird logic
+        if slow_charge_time >= time_till_overcharge and good_battery_health:
             overcharge_events.append(cur_time + time_till_overcharge)
             check_battery_health(cur_time + time_till_overcharge)
+            # weird transition logic only every should be hit once on trasition
+            # it basically clamps the value to 90
+            if not good_battery_health:
+                slow_charge = time_till_overcharge
+
 
         return (fast_time_limit + slow_charge_time, fast_charge_limit + slow_charge, fast_temp_limit + slow_temp)
 
