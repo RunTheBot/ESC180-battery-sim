@@ -81,7 +81,7 @@ def calculate_charge(total_time):
 
         # ensure we don't charge past max charge
         if (slow_charge + cur_charge + fast_charge_max > max_capacity):
-            slow_charge += max_capacity - (slow_charge + cur_charge + fast_charge_max)
+            slow_charge += max(-slow_charge, max_capacity - (slow_charge + cur_charge + fast_charge_max))
 
         # Overcharge logic
         # Define as when the battery is charged beyond 90% (inclusive)
@@ -213,6 +213,12 @@ if __name__ == '__main__':
     print(get_cur_charge()) # 90
     print(get_cur_temp()) # 22.5
     print(get_cur_battery_health()) # False
+
+    print("look here")
+
+    # edge case charge above max
+    simulate_activity("charge",80)
+    print(get_cur_charge()) # 90
 
     simulate_activity("use",40)
     print(get_cur_charge()) # 10
