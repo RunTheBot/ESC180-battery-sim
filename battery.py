@@ -108,7 +108,7 @@ def calculate_charge(total_time):
                 #if we hit bad battery health, stop charging 
 
 
-        return (fast_time_limit + slow_charge_time, fast_charge_limit + slow_charge, fast_temp_limit + slow_temp)
+        return (fast_time_max + slow_charge_time, fast_charge_max + slow_charge, fast_temp_max + slow_temp)
     # (total time, total charge, total temp) --> so far 
 
 def calculate_charge_time(charge_needed):
@@ -116,8 +116,8 @@ def calculate_charge_time(charge_needed):
     if charge_needed <= 0:
         return 0
 
-    time_limit, charge_limit, temp_limit = calculate_max_fast_charge()
-    if charge_needed <= charge_limit: #charge needed <= fast charge limit 
+    fast_time_max, fast_charge_max, fast_temp_max = calculate_max_fast_charge()
+    if charge_needed <= fast_charge_max: #charge needed <= fast charge limit
         return charge_needed / 3 #amount of charge needed until until slow charge 
     else:
         # slow charge the rest of the time
