@@ -46,6 +46,7 @@ def get_cur_battery_health():
     return good_battery_health 
 
 def charge_time_needed(minutes):
+    #Calculates how much time we need to charge for the battery to be able to last for given minutes 
     global cur_charge 
     global max_capacity 
     global good_battery_health 
@@ -55,15 +56,21 @@ def charge_time_needed(minutes):
     #Fast charge till max or we hit out time max 
     fast_charge_max = duration_fast_charge_possible() 
 
+    #Battery can only last for a maximum of 50 (good battery health) or 40 (bad battery health) minutes 
+    #It is not possible for the battery to be able to last longer 
     if (minutes > 50) or (good_battery_health == False and minutes > 40): 
         return -1 
     
     charge_needed = minutes * 2 
+
+    #If we have enough charge for the battery to last 
     if (cur_charge >= charge_needed): 
         return (0) 
     else: 
+        #Only fast charge is needed to obtain the charge needed 
         if (charge_needed < cur_charge + fast_charge_max * 3): 
             return ((charge_needed - cur_charge)/ 3) 
+        #Fast and slow charge is needed to obtain the charge needed 
         else: 
             return (fast_charge_max + (charge_needed - fast_charge_max * 3 - cur_charge)) 
         
@@ -84,16 +91,15 @@ def duration_fast_charge_possible():
     if not good_battery_health: #Requirement #3 
         return (0) 
 
-    #time_limit*3 --> How much more CHARGE intil limit is reached 
-    #time_limit*0.5 --> how much more TEMP until limit is reached 
     #Find which max is reached first 
-    
     time_temp_max = (40 - cur_temp) / 0.5 
     time_charge_max = (80 - cur_charge) / 3 
     time_max = max(0, min(time_temp_max , time_charge_max)) 
     return (time_max) 
 
 def calculate_charge(total_time): 
+    #Calculates resulting time, charge, and temperature after activity 
+
     global cur_charge 
     global max_capacity 
     global good_battery_health 
@@ -103,11 +109,12 @@ def calculate_charge(total_time):
     #Fast charge till max or we hit out time max 
     fast_charge_max = duration_fast_charge_possible() 
 
+    #When we only need to fast charge 
     if total_time <= fast_charge_max: 
         return (total_time, cur_charge + total_time * 3, cur_temp + total_time * 0.5) #Fast charge 
 
     else: 
-        #Slow charge the rest of hte time 
+        #Slow charge the rest of the time 
         slow_charge_time = total_time - fast_charge_max  
         slow_charge = slow_charge_time * 1 
         slow_temp = slow_charge_time * 0.25 
@@ -118,9 +125,12 @@ def calculate_charge(total_time):
     else: 
         max_capacity = 100 
 
+    #If charge is past 90%, battery health is reduced. Time is recorded in array 
     if (cur_charge + fast_charge_max * 3 + slow_charge > 90): 
         overcharge_events.append(cur_time + total_time)
 
+    #Check if charge is past 90% 3 times within 6 hours 
+    #Transition from bad battery health to good battery health 
     if (len(overcharge_events) - 1) >= 2 and good_battery_health: 
         if (overcharge_events[len(overcharge_events) -1] - overcharge_events[len(overcharge_events) -3]) <= 360: 
             good_battery_health = False 
@@ -142,9 +152,12 @@ def calculate_use(use_minutes):
     mins_to_death = cur_charge / 2 
     mins_after_death = use_minutes - mins_to_death 
 
+    #We have enough battery for usage 
     if (cur_charge >= use_minutes * 2): 
+        #Clamp charge and temp. Ensure they do not go below 0 
         return (use_minutes, max (0, cur_charge - use_minutes * 2), max (0, cur_temp + use_minutes * 1)) 
     else: 
+        #If we do not have enough battery for usage, temperature decreases by 1C per min for the rest of the time 
         return (use_minutes, 0, max (0, cur_temp + mins_to_death * 1 - mins_after_death * 1)) 
 #IDLE 
 # - Discharges the battery by 0.5% per minute 
