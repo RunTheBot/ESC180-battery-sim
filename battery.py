@@ -78,6 +78,7 @@ def check_battery_health(time):
     if recent_overcharge_count >= OVERCHARGE_EVENT_LIMIT:
         is_battery_healthy = False
         max_capacity = UNHEALTHY_MAX_CAPACITY
+
 # present tense use
 def calculate_battery_use(minutes):
     # Uses 2% per minute
@@ -167,6 +168,7 @@ def simulate_activity(activity, duration):
     else:
         return
 
+# --- getters ---
 def duration_fast_charge_possible():
     return calculate_max_fast_charge()[TIME]
 
@@ -178,6 +180,9 @@ def get_cur_charge():
 
 def get_cur_battery_health():
     return is_battery_healthy
+
+
+# --- time prediction stuff ---
 
 def charge_time_needed(minutes):
     # Returns the time needed to charge the battery for use in minutes
