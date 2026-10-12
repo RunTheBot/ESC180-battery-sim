@@ -213,10 +213,10 @@ def charge_time_needed(minutes):
     percentage_needed = minutes * USE_DISCHARGE_RATE
     charge_needed = percentage_needed - cur_charge
 
-    if percentage_needed > max_capacity:
-        return None
     if charge_needed <= MIN_CHARGE:
         return MIN_DURATION
+    if percentage_needed > max_capacity:
+        return None
     return calculate_charge_time(charge_needed)
 
     
