@@ -138,36 +138,7 @@ def calculate_charge(total_time):
 
 
         return (max_fast_charge_minutes + slow_charge_time, max_fast_charge_gain + slow_charge, fast_temp_max + slow_temp)
-    # (total time, total charge, total temp) --> so far 
-
-def calculate_charge_time(charge_needed):
-    # Returns the time needed to charge the battery for use in minutes
-    if charge_needed <= MIN_CHARGE:
-        return MIN_DURATION
-
-    max_fast_charge_minutes, max_fast_charge_gain, fast_temp_max = calculate_max_fast_charge()
-    if charge_needed <= max_fast_charge_gain: #charge needed <= fast charge limit
-        return charge_needed / FAST_CHARGE_RATE # Time needed to obtain the required charge using fast charging.
-    else:
-        # slow charge the rest of the time
-        slow_charge_needed = charge_needed - max_fast_charge_gain
-        slow_charge_time = slow_charge_needed / SLOW_CHARGE_RATE
-        # Overcharge logic
-
-        minutes_until_overcharge = max(MIN_CHARGE, OVERCHARGE_THRESHOLD - cur_charge - max_fast_charge_gain) / SLOW_CHARGE_RATE
-        # Only check while the battery is healthy because the transition needs special handling.
-        if slow_charge_time > minutes_until_overcharge and is_battery_healthy:
-            time = elapsed_minutes + minutes_until_overcharge + max_fast_charge_gain
-            recent_overcharge_count = 0
-            for event in overcharge_events:
-                if time - event < OVERCHARGE_WINDOW:
-                    recent_overcharge_count += 1
-            if recent_overcharge_count >= OVERCHARGE_EVENT_LIMIT - 1:
-                return None
-        
-        return max_fast_charge_minutes + slow_charge_time
-        
-        
+    # (total time, total charge, total temp) --> so far
 
 def apply_activity(duration, charge, temp):
     global cur_temp
@@ -219,7 +190,35 @@ def charge_time_needed(minutes):
         return None
     return calculate_charge_time(charge_needed)
 
-    
+
+def calculate_charge_time(charge_needed):
+    # Returns the time needed to charge the battery for use in minutes
+    if charge_needed <= MIN_CHARGE:
+        return MIN_DURATION
+
+    max_fast_charge_minutes, max_fast_charge_gain, fast_temp_max = calculate_max_fast_charge()
+    if charge_needed <= max_fast_charge_gain:  # charge needed <= fast charge limit
+        return charge_needed / FAST_CHARGE_RATE  # Time needed to obtain the required charge using fast charging.
+    else:
+        # slow charge the rest of the time
+        slow_charge_needed = charge_needed - max_fast_charge_gain
+        slow_charge_time = slow_charge_needed / SLOW_CHARGE_RATE
+        # Overcharge logic
+
+        minutes_until_overcharge = max(MIN_CHARGE,
+                                       OVERCHARGE_THRESHOLD - cur_charge - max_fast_charge_gain) / SLOW_CHARGE_RATE
+        # Only check while the battery is healthy because the transition needs special handling.
+        if slow_charge_time > minutes_until_overcharge and is_battery_healthy:
+            time = elapsed_minutes + minutes_until_overcharge + max_fast_charge_gain
+            recent_overcharge_count = 0
+            for event in overcharge_events:
+                if time - event < OVERCHARGE_WINDOW:
+                    recent_overcharge_count += 1
+            if recent_overcharge_count >= OVERCHARGE_EVENT_LIMIT - 1:
+                return None
+
+        return max_fast_charge_minutes + slow_charge_time
+
 
 if __name__ == '__main__':
     initialize()
