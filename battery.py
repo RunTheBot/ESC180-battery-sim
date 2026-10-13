@@ -270,11 +270,11 @@ if __name__ == '__main__':
 
     simulate_activity("use",40)
     print(get_cur_charge()) # 10
-    print(get_cur_temp()) # 62.5
+    print(get_cur_temp()) # 82.5
 
     simulate_activity("charge",80)
     print(get_cur_charge()) # 80
-    print(get_cur_temp()) # 82.5
+    print(get_cur_temp()) # 102.5
 
     initialize()
     # add your tests here
