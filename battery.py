@@ -127,7 +127,7 @@ def calculate_charge(total_time):
         minutes_until_overcharge = max(MIN_CHARGE, OVERCHARGE_THRESHOLD - cur_charge - max_fast_charge_gain) / SLOW_CHARGE_RATE
         # Only check while the battery is healthy because the transition needs special handling.
         if slow_charge_time >= minutes_until_overcharge and is_battery_healthy:
-            overcharge_events.append(elapsed_minutes + minutes_until_overcharge + max_fast_charge_gain)
+            overcharge_events.append(elapsed_minutes + minutes_until_overcharge + max_fast_charge_minutes)
             check_battery_health(elapsed_minutes + minutes_until_overcharge + max_fast_charge_gain)
             # This transition logic should run only once, when battery health changes.
             # It clamps the charge to 90%.
